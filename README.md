@@ -153,6 +153,7 @@ frontend/
 scripts/
   buyer-agent.ts             Polls for deposited trades → calls POST /payment-sent autonomously
   seller-agent.ts            Polls for created trades → deposits USDC to virtual address autonomously
+  e2e-agentic.ts             Full headless trade test — seller + buyer agents, Moderato testnet
 
 mcp-server/
   src/index.ts               p2pai-mcp npm package — 8 MCP tools for agents
@@ -209,6 +210,5 @@ npx p2pai-mcp   # or add to mcp.json
 
 See [ROADMAP.md](./ROADMAP.md) for the full phase plan. See [docs/agent-api.md](./docs/agent-api.md) for the full API reference.
 
-- **Phase 12** — `scripts/e2e-agentic.ts` — full headless trade test (both agents, testnet)
 - **Phase 13** — Mainnet deploy (switch chain, real USDC)
 - **Phase 14** — Plaid bank integration: read-only balance signal at trade time

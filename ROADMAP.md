@@ -1,10 +1,10 @@
 # p2pai — Roadmap
 
-## Current state: v2.3.1 (2026-05-03)
+## Current state: v2.3.2 (2026-05-03)
 
-Seller agent shipped (Phase 11) — `scripts/seller-agent.ts` auto-deposits USDC when a trade reaches `created`. LLM-consumable context at `/llms.txt` + `/llms-full.txt` + `skill.md`. Full direct counterparty settlement flow live — buyer pays seller off-platform (Zelle/Venmo/bank/wire), seller confirms receipt, agent releases USDC on-chain. MCP server (8 tools). Frontend on Vercel + agent on Railway.
+End-to-end agentic test shipped (Phase 12) — `scripts/e2e-agentic.ts` runs a complete trade headlessly on Moderato testnet with two EOA accounts. All scripts ready: buyer-agent, seller-agent, e2e. Frontend on Vercel + agent on Railway.
 
-Next focus: End-to-end agentic test (Phase 12) — both agents run headlessly, trade completes on testnet.
+Next focus: Phase 13 — Mainnet deploy.
 
 ---
 
@@ -30,23 +30,7 @@ Next focus: End-to-end agentic test (Phase 12) — both agents run headlessly, t
 | Phase 9 — Agent API spec | v2.2.0 | `docs/agent-api.md` — full v2.2 endpoint reference; all routes, auth model, schemas, state machine, mppx client setup, full trade walkthrough |
 | Phase 10 — Cleanup pass | v2.3.0 | Migration 011 (drop 10 Stripe columns); remove `frontend/app/stripe/` pages; remove stale slash commands; fix `buyer-agent.ts` response check + Bearer header; clean `agents-content.tsx` copy |
 | Phase 11 — Seller agent script | v2.3.1 | `scripts/seller-agent.ts` — polls for `status = created` trades, checks USDC balance, deposits to virtual address via viem; mirrors buyer-agent.ts polling pattern |
-
----
-
-## Phase 12 — End-to-end agentic test
-
-**Goal:** Full headless trade — both seller and buyer agents run unattended, trade completes on testnet.
-
-`scripts/e2e-agentic.ts`:
-1. Post SELL order via API (pays maker fee)
-2. Match it from buyer address via API (pays taker fee)
-3. Seller agent deposits USDC automatically
-4. Buyer agent marks payment sent with reference
-5. Seller agent confirms receipt → USDC released
-6. Assert `status = complete` in Supabase
-7. Assert buyer USDC balance increased on-chain
-
-**Done when:** `tsx scripts/e2e-agentic.ts` passes with both agents running headlessly on testnet.
+| Phase 12 — End-to-end agentic test | v2.3.2 | `scripts/e2e-agentic.ts` — full headless trade on Moderato testnet; mppx pull mode for EOA maker/taker fees; polls Supabase for status transitions; asserts buyer balance increased |
 
 ---
 

@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.3.2] — 2026-05-03
+
+### Added
+- **`scripts/e2e-agentic.ts`** (Phase 12) — full headless trade test on Moderato testnet. Seller and buyer are EOA private-key accounts. Runs all 8 steps: create SELL order (mppx maker fee), match as buyer (mppx taker fee), seller deposits USDC to virtual address, poll until deposited, mark payment sent, confirm payment, poll until complete, assert buyer balance increased. Uses `mppx/client` with `tempo.charge` pull mode (default for local EOA accounts) for the x402-gated steps.
+
+---
+
 ## [2.3.1] — 2026-05-03
 
 ### Added
