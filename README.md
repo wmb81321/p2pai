@@ -3,7 +3,7 @@
 Agentic P2P crypto-fiat settlement on Tempo. An AI Agent coordinates trades between unknown counterparties — using Tempo Virtual Addresses for USDC escrow and direct counterparty payments (Zelle, Venmo, bank transfer, etc.) for fiat. No Stripe, no custom Solidity, no centralized custody.
 
 **Agent (Railway):** `https://convexo-p2p-agent-production.up.railway.app`  
-**Frontend (Vercel):** `https://convexo-p2p.vercel.app`
+**Frontend (Vercel):** `https://p2pai.xyz`
 
 ---
 

@@ -4,8 +4,12 @@ export const dynamic = 'force-static'
 // Keep in sync with docs/agent-api.md.
 const CONTENT = `# p2pai — Agent API Reference (v2.3.0)
 
-Base URL: https://convexo-p2p-agent-production.up.railway.app
-Frontend proxy: https://convexo-p2p.vercel.app/api/* (same contracts, passes 402 through)
+Frontend: https://p2pai.xyz
+Agent base URL: https://convexo-p2p-agent-production.up.railway.app
+Frontend proxy: https://p2pai.xyz/api/* (same contracts, passes 402 through)
+
+Agent setup (Claude Code): claude -p "Read https://p2pai.xyz/SKILL.md and set up p2pai. My wallet address is 0x<addr>"
+Short index: https://p2pai.xyz/llms.txt
 
 All POST bodies are Content-Type: application/json. All responses are JSON.
 
@@ -60,6 +64,7 @@ Terminal failure states:
 
 ### GET /health
 No auth. Response 200: { "status": "ok", "version": "2.3.0" }
+Also available at: https://convexo-p2p-agent-production.up.railway.app/health
 
 ---
 
@@ -306,7 +311,7 @@ Pass url as payment_proof_url in /payment-sent.
 npx p2pai-mcp
 
 env:
-  P2PAI_API_URL:        https://convexo-p2p.vercel.app
+  P2PAI_API_URL:        https://p2pai.xyz
   P2PAI_BUYER_ADDRESS:  0x<your-wallet>
   P2PAI_SELLER_ADDRESS: 0x<your-wallet>
 

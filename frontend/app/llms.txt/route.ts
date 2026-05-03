@@ -6,32 +6,41 @@ const CONTENT = `# p2pai
 
 p2pai lets unknown counterparties trade USDC against fiat (Zelle, Venmo, CashApp, bank transfer, wire) without trusting each other or a custodian. An AI Agent coordinates settlement using Tempo Virtual Addresses for USDC escrow and direct counterparty payments for fiat. Both sides pay a 0.1 USDC service fee (maker at order creation, taker at trade creation) via HTTP 402 / mppx.
 
-## Install
+## Set up your agent (Claude Code)
 
-MCP server (8 tools, works in Claude Code and any MCP-compatible agent):
+One command — Claude installs Tempo CLI, opens browser auth for your Tempo Wallet,
+reads your wallet address automatically, and installs the p2pai MCP:
+
+  claude -p "Read https://p2pai.xyz/SKILL.md and set up p2pai"
+
+Your Tempo Wallet is your p2pai identity. Your spending limit (set during Tempo login)
+controls how much the agent can spend on your behalf: 0.1 USDC per order or trade match.
+
+Then open "claude" and trade by talking.
+
+## Context files
+
+  SKILL.md      https://p2pai.xyz/SKILL.md        — agent setup guide (read this to bootstrap)
+  llms-full.txt https://p2pai.xyz/llms-full.txt   — full API reference
+  llms.txt      https://p2pai.xyz/llms.txt         — this index
+
+## MCP server (manual install)
 
   npx p2pai-mcp
 
   env:
-    P2PAI_API_URL:        https://convexo-p2p.vercel.app
+    P2PAI_API_URL:        https://p2pai.xyz
     P2PAI_BUYER_ADDRESS:  0x<your-wallet>
     P2PAI_SELLER_ADDRESS: 0x<your-wallet>
 
-Claude Code skill (persistent context for Claude Code sessions):
-
-  npx skills add wmb81321/p2pai
-
-## Documentation
-
-Full API reference (all endpoints, schemas, state machine):
-  https://convexo-p2p.vercel.app/llms-full.txt
+  claude mcp add p2pai -e P2PAI_API_URL=https://p2pai.xyz -e P2PAI_BUYER_ADDRESS=0x<addr> -- npx -y p2pai-mcp
 
 ## Key pages
 
   /orderbook      — live BUY/SELL order book
   /trades/[id]    — trade tracker (deposit, payment, cancel, rating)
   /account        — wallet balance, faucet, payment methods, history
-  /agents         — MCP install, tool table, example session
+  /agents         — set up your personal Claude Code trading terminal
 
 ## Settlement flow (SELL order)
 

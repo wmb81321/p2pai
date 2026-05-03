@@ -3,8 +3,8 @@
 > **Status: superseded as of v2.0.0.**
 >
 > This document describes the v1.x Stripe-based architecture. It is kept for historical reference only.
-> For the current v2.2.0 architecture, see:
-> - **[docs/agent-api.md](./agent-api.md)** — authoritative v2.2 API reference
+> For the current v2.3.0 architecture, see:
+> - **[docs/agent-api.md](./agent-api.md)** — authoritative v2.3 API reference
 > - **[CLAUDE.md](../CLAUDE.md)** — full stack, trade state machine, and hard rules
 > - **[ROADMAP.md](../ROADMAP.md)** — phase plan and what was cut
 

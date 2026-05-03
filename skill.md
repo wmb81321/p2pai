@@ -2,9 +2,9 @@
 
 Agentic P2P crypto-fiat settlement on Tempo. An AI Agent coordinates trades between unknown counterparties using Tempo Virtual Addresses for USDC escrow and direct off-platform fiat payments (Zelle, Venmo, CashApp, bank transfer, wire). v2.3.0 · Moderato testnet.
 
-**Frontend:** https://convexo-p2p.vercel.app  
+**Frontend:** https://p2pai.xyz  
 **Agent API:** https://convexo-p2p-agent-production.up.railway.app  
-**Full API reference:** https://convexo-p2p.vercel.app/llms-full.txt
+**Full API reference:** https://p2pai.xyz/llms-full.txt
 
 ---
 
@@ -17,7 +17,7 @@ Agentic P2P crypto-fiat settlement on Tempo. An AI Agent coordinates trades betw
       "command": "npx",
       "args": ["-y", "p2pai-mcp"],
       "env": {
-        "P2PAI_API_URL":        "https://convexo-p2p.vercel.app",
+        "P2PAI_API_URL":        "https://p2pai.xyz",
         "P2PAI_BUYER_ADDRESS":  "0x<your-wallet>",
         "P2PAI_SELLER_ADDRESS": "0x<your-wallet>"
       }
@@ -104,5 +104,5 @@ GET  /health                        public — { status: "ok", version: "2.3.0" 
 Fetch the complete endpoint reference (request schemas, response shapes, all errors):
 
 ```
-GET https://convexo-p2p.vercel.app/llms-full.txt
+GET https://p2pai.xyz/llms-full.txt
 ```

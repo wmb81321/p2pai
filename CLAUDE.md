@@ -4,13 +4,13 @@ p2pai is an agentic P2P crypto-fiat settlement app. An AI Agent coordinates trad
 
 ---
 
-## Current Build Status (2026-05-03) — v2.3.0
+## Current Build Status (2026-05-03) — v2.4.0
 
-**Taker fee. Mutual cancellation with USDC refund. Image proof upload. Agent API spec. Stripe columns dropped. 11 migrations applied.**
+**Domain → p2pai.xyz. SKILL.md agent onboarding. Taker fee. Mutual cancellation with USDC refund. Image proof upload. Agent API spec. Stripe columns dropped. 11 migrations applied.**
 
 | Layer | Status | Notes |
 |---|---|---|
-| Supabase schema + RLS | ✓ Live | `users`, `orders`, `trades`, `ratings` — 10 migrations applied |
+| Supabase schema + RLS | ✓ Live | `users`, `orders`, `trades`, `ratings` — 11 migrations applied |
 | Migration 007 | ✓ Applied | `orders.virtual_deposit_address` (unique), `service_fee_paid_at`, `service_fee_tx_hash`; legacy open orders expired |
 | Migration 008 | ✓ Applied | `orders.seller_payment_methods` jsonb — payment method snapshot at order creation |
 | Migration 009 | ✓ Applied | `cancelled` and `refunding` added to trade status enum |
@@ -18,9 +18,9 @@ p2pai is an agentic P2P crypto-fiat settlement app. An AI Agent coordinates trad
 | Migration 011 | ✓ Applied | Drop legacy Stripe columns from `users` and `trades` (10 columns removed) |
 | Tempo Virtual Address | ✓ Registered | `AGENT_MASTER_ID=0x3ead6d3d`, on-chain Moderato testnet |
 | Agent wallet (EOA) | ✓ Funded | `0x6772787e16a7ea4c5307cc739cc5116b4b26ffc0` |
-| Railway agent | ✓ Live | v2.2.0 — no global Bearer gate; address-in-body auth |
+| Railway agent | ✓ Live | v2.3.0 — no global Bearer gate; address-in-body auth |
 | Railway deploy method | ✓ Git-push | Repo: `wmb81321/onix`, root dir: `/agent`, builder: Dockerfile |
-| Vercel frontend | ✓ Live | v2.2.0 — taker fee, mutual cancel UI, image proof upload |
+| Vercel frontend | ✓ Live | v2.4.0 at p2pai.xyz — taker fee, mutual cancel UI, image proof upload, SKILL.md |
 | `POST /orders` (agent) | ✓ Live | Public — mppx x402 gate (maker fee 0.1 USDC); creates order + VA; fee forfeited on cancel |
 | `POST /orders/:id/cancel` (agent) | ✓ Live | Address-verified (requester must be order creator), DB-only cancel |
 | `POST /trades` (agent) | ✓ Live | mppx x402 gate (taker fee 0.1 USDC); `externalId = taker_<buyer>_<orderId>`; creates trade |
@@ -41,7 +41,8 @@ p2pai is an agentic P2P crypto-fiat settlement app. An AI Agent coordinates trad
 | Ratings | ✓ Live | 1-5 stars after released/complete, updates rating_avg |
 | BUY order matching | ✓ Live | Buyer/seller roles swapped correctly for BUY orders |
 | MCP server (`p2pai-mcp`) | ✓ v2.0.0 | 8 tools — `mark_payment_sent`, `confirm_payment`, `settle_trade` etc. |
-| `/agents` page | ✓ Live | Developer install page — MCP snippet, tool table, example session |
+| `/agents` page | ✓ Live | User onboarding — Tempo-style `claude -p "Read https://p2pai.xyz/SKILL.md..."` flow; wallet-aware |
+| `SKILL.md` route | ✓ Live | `p2pai.xyz/SKILL.md` — machine-readable setup file; Claude reads + runs `claude mcp add` automatically |
 | Public `GET /api/orders` | ✓ Live | No-auth order listing; `?type=`, `?status=`, `?id=` query params |
 | mppx push mode | ✓ Live | `mode: 'push'` for both maker fee (place order) and taker fee (match order); no `feePayer: true` in agent config |
 | Stripe agent code | ✗ Removed | `agent/src/stripe/`, `agent/src/lib/link.ts`, `agent/src/routes/webhooks.ts`, `flowA.ts` deleted |

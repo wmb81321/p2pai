@@ -6,7 +6,7 @@ import { z } from 'zod'
 // Environment
 // ---------------------------------------------------------------------------
 
-const API_URL        = process.env['P2PAI_API_URL']       ?? 'https://convexo-p2p.vercel.app'
+const API_URL        = process.env['P2PAI_API_URL']       ?? 'https://p2pai.xyz'
 const BUYER_ADDRESS  = process.env['P2PAI_BUYER_ADDRESS'] ?? null
 const SELLER_ADDRESS = process.env['P2PAI_SELLER_ADDRESS'] ?? null
 

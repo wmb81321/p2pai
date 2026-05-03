@@ -1,8 +1,8 @@
 # p2pai — Roadmap
 
-## Current state: v2.3.2 (2026-05-03)
+## Current state: v2.4.0 (2026-05-03)
 
-End-to-end agentic test shipped (Phase 12) — `scripts/e2e-agentic.ts` runs a complete trade headlessly on Moderato testnet with two EOA accounts. All scripts ready: buyer-agent, seller-agent, e2e. Frontend on Vercel + agent on Railway.
+Domain migrated to `p2pai.xyz`. `/agents` page rewritten as a Tempo-style user onboarding flow — `SKILL.md` route at `p2pai.xyz/SKILL.md` lets any user bootstrap Claude Code with one command: `claude -p "Read https://p2pai.xyz/SKILL.md and set up p2pai. My wallet is 0x..."`. All docs updated.
 
 Next focus: Phase 13 — Mainnet deploy.
 
@@ -31,6 +31,7 @@ Next focus: Phase 13 — Mainnet deploy.
 | Phase 10 — Cleanup pass | v2.3.0 | Migration 011 (drop 10 Stripe columns); remove `frontend/app/stripe/` pages; remove stale slash commands; fix `buyer-agent.ts` response check + Bearer header; clean `agents-content.tsx` copy |
 | Phase 11 — Seller agent script | v2.3.1 | `scripts/seller-agent.ts` — polls for `status = created` trades, checks USDC balance, deposits to virtual address via viem; mirrors buyer-agent.ts polling pattern |
 | Phase 12 — End-to-end agentic test | v2.3.2 | `scripts/e2e-agentic.ts` — full headless trade on Moderato testnet; mppx pull mode for EOA maker/taker fees; polls Supabase for status transitions; asserts buyer balance increased |
+| Domain + agent onboarding | v2.4.0 | Frontend moved to `p2pai.xyz`; `/agents` page rewritten as user onboarding (Tempo-style); `SKILL.md` route (`p2pai.xyz/SKILL.md`) — one command bootstraps Claude Code with MCP + wallet; all docs updated to p2pai.xyz |
 
 ---
 

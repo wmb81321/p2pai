@@ -7,7 +7,7 @@ Deploy the agent to Railway production via GitHub push.
 - **URL:** `https://convexo-p2p-agent-production.up.railway.app`
 - **Repo:** `wmb81321/onix`, root dir: `/agent`, builder: Dockerfile
 - **Trigger:** any push to `main` branch auto-deploys (GitHub integration)
-- **Version:** v2.0.0
+- **Version:** v2.3.0
 
 ## Deploy steps
 
@@ -29,7 +29,7 @@ Deploy the agent to Railway production via GitHub push.
    ```bash
    curl https://convexo-p2p-agent-production.up.railway.app/health
    ```
-   Expected: `{"status":"ok","version":"2.0.0"}`
+   Expected: `{"status":"ok","version":"2.3.0"}`
 
 > **Note:** `railway up` is NOT used. Always deploy via `git push`.
 

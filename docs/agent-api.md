@@ -1,7 +1,7 @@
-# p2pai — Agent API Reference (v2.2.0)
+# p2pai — Agent API Reference (v2.3.0)
 
 **Base URL:** `https://convexo-p2p-agent-production.up.railway.app`  
-**Frontend proxy:** `https://convexo-p2p.vercel.app/api/*` (same contracts, passes 402 through)
+**Frontend proxy:** `https://p2pai.xyz/api/*` (same contracts, passes 402 through)
 
 All POST bodies are `Content-Type: application/json`. All responses are JSON.
 
@@ -490,7 +490,7 @@ Pass the returned `url` as `payment_proof_url` in the `payment-sent` request. Ma
       "command": "npx",
       "args": ["-y", "p2pai-mcp"],
       "env": {
-        "P2PAI_API_URL":       "https://convexo-p2p.vercel.app",
+        "P2PAI_API_URL":       "https://p2pai.xyz",
         "P2PAI_BUYER_ADDRESS":  "0x<your-wallet>",
         "P2PAI_SELLER_ADDRESS": "0x<your-wallet>"
       }
