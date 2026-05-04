@@ -5,7 +5,7 @@ Deploy the agent to Railway production via GitHub push.
 ## Current deployment
 
 - **URL:** `https://convexo-p2p-agent-production.up.railway.app`
-- **Repo:** `wmb81321/onix`, root dir: `/agent`, builder: Dockerfile
+- **Repo:** `wmb81321/p2pai`, root dir: `/agent`, builder: Dockerfile
 - **Trigger:** any push to `main` branch auto-deploys (GitHub integration)
 - **Version:** v2.3.0
 

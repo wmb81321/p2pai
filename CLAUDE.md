@@ -19,7 +19,7 @@ p2pai is an agentic P2P crypto-fiat settlement app. An AI Agent coordinates trad
 | Tempo Virtual Address | ✓ Registered | `AGENT_MASTER_ID=0x3ead6d3d`, on-chain Moderato testnet |
 | Agent wallet (EOA) | ✓ Funded | `0x6772787e16a7ea4c5307cc739cc5116b4b26ffc0` |
 | Railway agent | ✓ Live | v2.3.0 — no global Bearer gate; address-in-body auth |
-| Railway deploy method | ✓ Git-push | Repo: `wmb81321/onix`, root dir: `/agent`, builder: Dockerfile |
+| Railway deploy method | ✓ Git-push | Repo: `wmb81321/p2pai`, root dir: `/agent`, builder: Dockerfile |
 | Vercel frontend | ✓ Live | v2.4.0 at p2pai.xyz — taker fee, mutual cancel UI, image proof upload, SKILL.md |
 | `POST /orders` (agent) | ✓ Live | Public — mppx x402 gate (maker fee 0.1 USDC); creates order + VA; fee forfeited on cancel |
 | `POST /orders/:id/cancel` (agent) | ✓ Live | Address-verified (requester must be order creator), DB-only cancel |
