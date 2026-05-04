@@ -33,7 +33,7 @@ Then open "claude" and trade by talking.
     P2PAI_BUYER_ADDRESS:  0x<your-wallet>
     P2PAI_SELLER_ADDRESS: 0x<your-wallet>
 
-  claude mcp add p2pai -e P2PAI_API_URL=https://p2pai.xyz -e P2PAI_BUYER_ADDRESS=0x<addr> -- npx -y p2pai-mcp
+  claude mcp add p2pai -s user -e P2PAI_API_URL=https://p2pai.xyz -e P2PAI_BUYER_ADDRESS=0x<addr> -- npx -y p2pai-mcp
 
 ## Key pages
 

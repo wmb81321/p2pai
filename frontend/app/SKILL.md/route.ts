@@ -43,7 +43,7 @@ Read the wallet address and spending limit from the output. You will need both.
 Use the wallet address from Step 2. Replace \`<WALLET_ADDRESS>\` with the exact address from \`whoami\`:
 
 \`\`\`bash
-claude mcp add p2pai \\
+claude mcp add p2pai -s user \\
   -e P2PAI_API_URL=https://p2pai.xyz \\
   -e P2PAI_BUYER_ADDRESS=<WALLET_ADDRESS> \\
   -e P2PAI_SELLER_ADDRESS=<WALLET_ADDRESS> \\
