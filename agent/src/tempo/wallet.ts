@@ -3,7 +3,7 @@
  *
  * The agent EOA (AGENT_ACCESS_KEY_ADDRESS) holds all escrowed USDC —
  * virtual address deposits auto-forward here. This module releases
- * USDC to buyers after Stripe settlement is confirmed.
+ * USDC to buyers after the seller confirms fiat receipt.
  *
  * Tempo has sub-second deterministic finality — one block = final.
  * waitForTransactionReceipt returns immediately after inclusion.
@@ -39,7 +39,10 @@ export async function transferUsdc(
     args: [to, amount],
   })
 
-  await publicClient.waitForTransactionReceipt({ hash })
+  const receipt = await publicClient.waitForTransactionReceipt({ hash })
+  if (receipt.status !== 'success') {
+    throw new Error(`USDC transfer reverted on-chain (tx ${hash}) — check agent wallet balance`)
+  }
   return hash
 }
 

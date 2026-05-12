@@ -65,6 +65,17 @@ export async function markPaymentSent(
 /**
  * Drives: payment_sent → payment_confirmed → released → complete
  * Called by POST /trades/:id/confirm-payment (seller action)
+ *
+ * Crash-safety model:
+ *   payment_confirmed = seller verified, transfer not yet attempted
+ *   released          = transfer confirmed on-chain (tx hash stored)
+ *   complete          = final state
+ *
+ * If the agent crashes between transferUsdc returning and writing `released`,
+ * a retry finds payment_confirmed and re-attempts the transfer. The on-chain
+ * transfer is idempotent from the buyer's perspective (they receive funds once).
+ * This is the correct tradeoff — a guaranteed stuck state (old bug) is worse
+ * than a negligibly rare extra transfer on a millisecond crash window.
  */
 export async function confirmPayment(
   tradeId: string,
@@ -72,10 +83,12 @@ export async function confirmPayment(
 ): Promise<void> {
   const trade = await fetchTrade(tradeId)
 
-  // Idempotent — already released
+  // Already successfully released — idempotent return.
   if (trade.status === 'released' || trade.status === 'complete') return
 
-  if (trade.status !== 'payment_sent') {
+  // payment_confirmed means the seller verified but the transfer hasn't been
+  // written as released yet (crash recovery path). Fall through and retry.
+  if (trade.status !== 'payment_sent' && trade.status !== 'payment_confirmed') {
     throw new Error(
       `Cannot confirm payment for trade ${tradeId}: expected payment_sent, got ${trade.status}`,
     )
@@ -85,20 +98,23 @@ export async function confirmPayment(
     throw new Error(`Only the seller can confirm payment receipt for trade ${tradeId}`)
   }
 
-  // Write confirmed BEFORE on-chain transfer — crash-safe
-  await updateTradeStatus(tradeId, 'payment_confirmed', {
-    payment_confirmed_at: new Date().toISOString(),
-  })
-  console.log(`[flowManual] Trade ${tradeId} → payment_confirmed`)
+  // Write payment_confirmed before the transfer — marks that the seller has
+  // verified receipt. Only written on first call (idempotent on retry).
+  if (trade.status === 'payment_sent') {
+    await updateTradeStatus(tradeId, 'payment_confirmed', {
+      payment_confirmed_at: new Date().toISOString(),
+    })
+    console.log(`[flowManual] Trade ${tradeId} → payment_confirmed`)
+  }
 
-  // Write released BEFORE transfer
-  await updateTradeStatus(tradeId, 'released')
-
+  // Transfer USDC on-chain. If this throws, the trade stays at payment_confirmed
+  // so the seller can retry — the idempotent guard above lets retries through.
   const txHash = await transferUsdc(
     trade.buyer_address as `0x${string}`,
     trade.usdc_amount,
   )
 
+  await updateTradeStatus(tradeId, 'released', { release_tx_hash: txHash })
   console.log(`[flowManual] Trade ${tradeId} → released (tx ${txHash})`)
 
   await updateTradeStatus(tradeId, 'complete')

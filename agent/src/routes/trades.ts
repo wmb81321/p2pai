@@ -43,7 +43,12 @@ export function registerTradeRoutes(router: Router): void {
 
   // POST /trades — taker pays 0.1 USDC service fee, then trade is created
   router.post('/trades', async (req, res) => {
-    const body = CreateTradeBody.parse(await readJsonBody(req))
+    const parsed = CreateTradeBody.safeParse(await readJsonBody(req))
+    if (!parsed.success) {
+      json(res, 400, { error: parsed.error.issues[0]?.message ?? 'Invalid input' })
+      return
+    }
+    const body = parsed.data
 
     // externalId ties the charge to this (taker, order) pair — retries don't double-charge
     const takerFeeId = `taker_${body.buyer_address.toLowerCase()}_${body.order_id}`
@@ -52,14 +57,14 @@ export function registerTradeRoutes(router: Router): void {
 
     const deadline = new Date(Date.now() + DEPOSIT_TIMEOUT_MS).toISOString()
 
-    // Atomically lock the order — concurrent requests find status != 'open' and get 409
-    // Select virtual_deposit_address set at order creation (migration 007).
+    // Atomically lock the order — concurrent requests find status != 'open' and get 409.
+    // Also select fields needed for role validation and amount enforcement.
     const { data: matchedOrder, error: matchError } = await db
       .from('orders')
       .update({ status: 'matched' })
       .eq('id', body.order_id)
       .eq('status', 'open')
-      .select('id, virtual_deposit_address')
+      .select('id, virtual_deposit_address, user_address, type, usdc_amount, usd_amount')
       .maybeSingle()
 
     if (matchError) throw new Error(`Failed to match order: ${matchError.message}`)
@@ -74,6 +79,26 @@ export function registerTradeRoutes(router: Router): void {
       json(res, 409, { error: 'Order has no deposit address — cancel and re-create' })
       return
     }
+
+    // Verify party roles: the order creator must occupy the correct role.
+    // SELL order → creator is seller (deposits USDC); BUY order → creator is buyer (receives USDC).
+    // Without this check an attacker can supply any seller_address and intercept the USDC release.
+    const orderCreator = matchedOrder.user_address.toLowerCase()
+    if (matchedOrder.type === 'sell' && orderCreator !== body.seller_address.toLowerCase()) {
+      await db.from('orders').update({ status: 'open' }).eq('id', body.order_id)
+      json(res, 403, { error: 'seller_address must match the order creator for SELL orders' })
+      return
+    }
+    if (matchedOrder.type === 'buy' && orderCreator !== body.buyer_address.toLowerCase()) {
+      await db.from('orders').update({ status: 'open' }).eq('id', body.order_id)
+      json(res, 403, { error: 'buyer_address must match the order creator for BUY orders' })
+      return
+    }
+
+    // Use amounts from the locked order row — never trust body amounts.
+    // Taker forging usdc_amount could cause the deposit watcher to require the wrong amount.
+    const tradeUsdcAmount = matchedOrder.usdc_amount
+    const tradeUsdAmount  = matchedOrder.usd_amount
 
     const tradeId = randomUUID()
     const virtualAddress = matchedOrder.virtual_deposit_address as `0x${string}`
@@ -90,8 +115,8 @@ export function registerTradeRoutes(router: Router): void {
         order_id:                body.order_id,
         buyer_address:           body.buyer_address,
         seller_address:          body.seller_address,
-        usdc_amount:             body.usdc_amount,
-        usd_amount:              body.usd_amount,
+        usdc_amount:             tradeUsdcAmount,
+        usd_amount:              tradeUsdAmount,
         deposit_deadline:        deadline,
         virtual_deposit_address: virtualAddress,
         status:                  'created',
@@ -104,7 +129,7 @@ export function registerTradeRoutes(router: Router): void {
       throw new Error(`Failed to create trade: ${insertError?.message ?? 'no data'}`)
     }
 
-    const expectedAmount = BigInt(Math.round(body.usdc_amount * 1e6))
+    const expectedAmount = BigInt(Math.round(tradeUsdcAmount * 1e6))
     const deadlineMs = Date.now() + DEPOSIT_TIMEOUT_MS
 
     watchDeposit(
@@ -251,25 +276,29 @@ export function registerTradeRoutes(router: Router): void {
     const fromStatus = trade.cancel_requested_from_status ?? 'created'
     const needsRefund = ['deposited', 'payment_sent'].includes(fromStatus)
 
-    // Re-open the order so another counterparty can match it
-    await db.from('orders').update({ status: 'open' }).eq('id', trade.order_id).eq('status', 'matched')
-
     if (needsRefund) {
+      // Write refunding BEFORE transfer — crash-recoverable.
+      // Order stays locked until the on-chain refund confirms so the seller's USDC
+      // is never orphaned (order re-matchable while refund is in-flight).
       await updateTradeStatus(tradeId, 'refunding')
       try {
         const txHash = await transferUsdc(
           trade.seller_address as `0x${string}`,
           Number(trade.usdc_amount),
         )
+        // Refund confirmed — now safe to re-open the order and close the trade.
+        await db.from('orders').update({ status: 'open' }).eq('id', trade.order_id).eq('status', 'matched')
         await db.from('trades').update({ status: 'refunded' }).eq('id', tradeId)
         console.log(`[trades] Trade ${tradeId} refunded (mutual cancel) — tx ${txHash}`)
         json(res, 200, { ok: true, status: 'refunded', tx_hash: txHash })
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err)
-        console.error(`[trades] Refund failed for ${tradeId}:`, msg)
+        console.error(`[trades] Refund failed for ${tradeId} — trade left in refunding for manual recovery:`, msg)
         json(res, 500, { error: `Refund transfer failed: ${msg}` })
       }
     } else {
+      // No USDC deposited — no transfer needed, re-open immediately.
+      await db.from('orders').update({ status: 'open' }).eq('id', trade.order_id).eq('status', 'matched')
       await updateTradeStatus(tradeId, 'cancelled')
       console.log(`[trades] Trade ${tradeId} cancelled (mutual) by ${canceller_address}`)
       json(res, 200, { ok: true, status: 'cancelled' })

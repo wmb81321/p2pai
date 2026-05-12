@@ -11,7 +11,7 @@ export async function GET(req: NextRequest) {
   const { data, error } = await db
     .from('orders')
     .select('*')
-    .eq('user_address', address)
+    .eq('user_address', address.toLowerCase())
     .order('created_at', { ascending: false })
     .limit(10)
 

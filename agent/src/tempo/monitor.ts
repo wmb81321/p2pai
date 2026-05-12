@@ -46,6 +46,31 @@ export async function watchDeposit(
   })
 }
 
+/**
+ * Check whether a deposit already landed while the agent was offline.
+ * `watchEvent` only catches live events — this fills the gap on restart.
+ */
+async function checkHistoricalDeposit(
+  virtualAddress: `0x${string}`,
+  tokenAddress: `0x${string}`,
+  expectedAmount: bigint,
+): Promise<boolean> {
+  try {
+    const logs = await publicClient.getLogs({
+      address: tokenAddress,
+      event: TIP20_TRANSFER_ABI,
+      args: { to: virtualAddress },
+      fromBlock: 0n,
+      toBlock: 'latest',
+    })
+    return logs.some(log => (log.args.value ?? 0n) >= expectedAmount)
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err)
+    console.warn(`[monitor] Historical log query failed for ${virtualAddress}: ${msg}`)
+    return false
+  }
+}
+
 export async function startDepositMonitor(tokenAddress: `0x${string}`) {
   const { data: trades } = await db
     .from('trades')
@@ -54,11 +79,13 @@ export async function startDepositMonitor(tokenAddress: `0x${string}`) {
 
   if (!trades?.length) return
 
-  console.log(`[monitor] Watching ${trades.length} pending deposit(s)`)
+  console.log(`[monitor] Resuming watch for ${trades.length} pending deposit(s)`)
 
   // Run all watchers in parallel — each resolves independently on deposit or timeout
   await Promise.all(trades.map(async (trade) => {
     const deadlineMs = new Date(trade.deposit_deadline).getTime()
+    const expectedAmount = BigInt(Math.round(trade.usdc_amount * 1e6))
+    const virtualAddress = trade.virtual_deposit_address as `0x${string}`
 
     // Already expired — mark immediately instead of starting a watcher
     if (Date.now() >= deadlineMs) {
@@ -67,11 +94,20 @@ export async function startDepositMonitor(tokenAddress: `0x${string}`) {
       return
     }
 
+    // Backfill: deposit may have landed while the agent was restarting.
+    // watchEvent is forward-only — getLogs covers the offline gap.
+    const alreadyDeposited = await checkHistoricalDeposit(virtualAddress, tokenAddress, expectedAmount)
+    if (alreadyDeposited) {
+      await updateTradeStatus(trade.id, 'deposited')
+      console.log(`[monitor] Trade ${trade.id} → deposited (backfill on restart)`)
+      return
+    }
+
     const result = await watchDeposit(
-      trade.virtual_deposit_address as `0x${string}`,
+      virtualAddress,
       trade.id,
       tokenAddress,
-      BigInt(Math.round(trade.usdc_amount * 1e6)),
+      expectedAmount,
       deadlineMs,
     )
 

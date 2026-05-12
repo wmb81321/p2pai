@@ -68,6 +68,14 @@ if (!envResult.success) {
 
 const ENV = envResult.data
 
+// Safety gate — this script uses ephemeral in-memory state and is only safe on testnet.
+// Remove this check (with explicit intent) when adapting for mainnet operation.
+const MODERATO_CHAIN_ID = 42431
+if (ENV.TEMPO_CHAIN_ID !== MODERATO_CHAIN_ID) {
+  console.error(`[seller-agent] ABORT: this script is testnet-only (expected chain ${MODERATO_CHAIN_ID}, got ${ENV.TEMPO_CHAIN_ID})`)
+  process.exit(1)
+}
+
 // ---------------------------------------------------------------------------
 // Viem chain + clients
 // ---------------------------------------------------------------------------

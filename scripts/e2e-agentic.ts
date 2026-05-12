@@ -71,6 +71,15 @@ if (!envResult.success) {
 
 const ENV = envResult.data
 
+// Safety gate — this script generates ephemeral wallets and is only safe on testnet.
+// It cannot recover funded keys if it crashes mid-run. Do not run against mainnet.
+const MODERATO_CHAIN_ID = 42431
+const chainId = Number(process.env.TEMPO_CHAIN_ID ?? MODERATO_CHAIN_ID)
+if (chainId !== MODERATO_CHAIN_ID) {
+  console.error(`[e2e] ABORT: testnet-only script (expected chain ${MODERATO_CHAIN_ID}, got ${chainId})`)
+  process.exit(1)
+}
+
 // ---------------------------------------------------------------------------
 // Viem chain + clients
 // ---------------------------------------------------------------------------

@@ -30,6 +30,8 @@ export function PaymentSentForm({ tradeId, buyerAddress, usdAmount, sellerPaymen
     try {
       const fd = new FormData()
       fd.append('file', file)
+      fd.append('trade_id', tradeId)
+      fd.append('uploader_address', buyerAddress)
       const res = await fetch('/api/upload-proof', { method: 'POST', body: fd })
       const data = await res.json() as { url?: string; error?: string }
       if (!res.ok) { setUploadError(data.error ?? 'Upload failed'); return }

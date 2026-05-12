@@ -7,11 +7,12 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid address' }, { status: 400 })
   }
 
+  const addrLower = address.toLowerCase()
   const db = createServerClient()
   const { data, error } = await db
     .from('trades')
     .select('*')
-    .or(`buyer_address.eq.${address},seller_address.eq.${address}`)
+    .or(`buyer_address.eq.${addrLower},seller_address.eq.${addrLower}`)
     .order('created_at', { ascending: false })
     .limit(10)
 

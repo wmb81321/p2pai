@@ -22,7 +22,7 @@ async function main() {
 
   router.get('/health', async (_req, res) => {
     res.writeHead(200, { 'Content-Type': 'application/json' })
-    res.end(JSON.stringify({ status: 'ok', version: '2.1.0' }))
+    res.end(JSON.stringify({ status: 'ok', version: '2.4.0' }))
   })
 
   registerOrderRoutes(router)
