@@ -26,6 +26,13 @@ async function apiFetch(path: string, init?: RequestInit): Promise<unknown> {
   })
 
   if (!res.ok) {
+    if (res.status === 402) {
+      throw new Error(
+        'Payment required (0.1 USDC service fee). ' +
+        'This action requires mppx payment — use the p2pai web UI at p2pai.xyz ' +
+        'or run the e2e script with a funded EOA wallet.',
+      )
+    }
     const text = await res.text().catch(() => res.statusText)
     throw new Error(`API ${res.status}: ${text}`)
   }

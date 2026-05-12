@@ -12,9 +12,10 @@ export async function GET(req: NextRequest) {
 
   const db = createServerClient()
 
-  // seller_payment_methods is private — only revealed via the trade page after matching.
-  // All public order queries explicitly exclude it.
-  const PUBLIC_COLS = 'id, user_address, type, usdc_amount, usd_amount, rate, status, expires_at, created_at, virtual_deposit_address, service_fee_paid_at, service_fee_tx_hash'
+  // Intentionally excludes: virtual_deposit_address (internal escrow detail),
+  // service_fee_paid_at/tx_hash (internal audit fields), seller_payment_methods
+  // (revealed only to trade parties via the trade page after matching).
+  const PUBLIC_COLS = 'id, user_address, type, usdc_amount, usd_amount, rate, status, expires_at, created_at'
 
   if (id) {
     const { data, error } = await db.from('orders').select(PUBLIC_COLS).eq('id', id).single()

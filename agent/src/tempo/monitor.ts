@@ -39,6 +39,14 @@ export async function watchDeposit(
             await updateTradeStatus(tradeId, 'deposited')
             resolve('deposited')
             return
+          } else {
+            // Under-amount deposit: funds forwarded to master wallet but trade not unlocked.
+            // Log for manual review — operator must refund or ask seller to top up.
+            console.warn(
+              `[monitor] UNDER-AMOUNT deposit for trade ${tradeId}: ` +
+              `received ${log.args.value ?? 0n} units, expected ${expectedAmount}. ` +
+              `VA: ${virtualAddress} tx: ${log.transactionHash ?? 'unknown'}`,
+            )
           }
         }
       },

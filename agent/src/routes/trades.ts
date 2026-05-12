@@ -288,7 +288,9 @@ export function registerTradeRoutes(router: Router): void {
         )
         // Refund confirmed — now safe to re-open the order and close the trade.
         await db.from('orders').update({ status: 'open' }).eq('id', trade.order_id).eq('status', 'matched')
-        await db.from('trades').update({ status: 'refunded' }).eq('id', tradeId)
+        await db.from('trades')
+          .update({ status: 'refunded', cancel_requested_by: null, cancel_requested_from_status: null })
+          .eq('id', tradeId)
         console.log(`[trades] Trade ${tradeId} refunded (mutual cancel) — tx ${txHash}`)
         json(res, 200, { ok: true, status: 'refunded', tx_hash: txHash })
       } catch (err) {
@@ -299,7 +301,7 @@ export function registerTradeRoutes(router: Router): void {
     } else {
       // No USDC deposited — no transfer needed, re-open immediately.
       await db.from('orders').update({ status: 'open' }).eq('id', trade.order_id).eq('status', 'matched')
-      await updateTradeStatus(tradeId, 'cancelled')
+      await updateTradeStatus(tradeId, 'cancelled', { cancel_requested_by: null, cancel_requested_from_status: null })
       console.log(`[trades] Trade ${tradeId} cancelled (mutual) by ${canceller_address}`)
       json(res, 200, { ok: true, status: 'cancelled' })
     }

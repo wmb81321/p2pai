@@ -18,6 +18,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     return NextResponse.json({ error: 'Agent unreachable' }, { status: 502 })
   }
 
-  const data = await agentRes.json().catch(() => ({})) as unknown
+  const text = await agentRes.text()
+  let data: unknown
+  try { data = JSON.parse(text) } catch {
+    return NextResponse.json({ error: `Agent error (${agentRes.status})` }, { status: 502 })
+  }
   return NextResponse.json(data, { status: agentRes.status })
 }

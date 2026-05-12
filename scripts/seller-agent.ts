@@ -34,6 +34,7 @@ import {
   defineChain,
   http,
   parseAbi,
+  parseAbiItem,
 } from 'viem'
 import { privateKeyToAccount } from 'viem/accounts'
 import { z } from 'zod'
@@ -148,9 +149,35 @@ async function getSellerUsdcBalance(): Promise<bigint> {
 // Deposit USDC to virtual address
 // ---------------------------------------------------------------------------
 
+const TIP20_TRANSFER_ABI = parseAbiItem(
+  'event Transfer(address indexed from, address indexed to, uint256 value)',
+)
+
+async function isAlreadyDeposited(depositAddress: `0x${string}`, amountRaw: bigint): Promise<boolean> {
+  try {
+    const logs = await publicClient.getLogs({
+      address: tokenAddress,
+      event: TIP20_TRANSFER_ABI,
+      args: { to: depositAddress },
+      fromBlock: 0n,
+      toBlock: 'latest',
+    })
+    return logs.some(log => (log.args.value ?? 0n) >= amountRaw)
+  } catch {
+    return false
+  }
+}
+
 async function depositUsdc(trade: TradeRow): Promise<void> {
   const amountRaw = BigInt(Math.round(trade.usdc_amount * 1e6))
   const depositAddress = trade.virtual_deposit_address as `0x${string}`
+
+  // Guard against double-deposit on script restart — check on-chain first.
+  const alreadySent = await isAlreadyDeposited(depositAddress, amountRaw)
+  if (alreadySent) {
+    console.log(`[seller-agent] Trade ${trade.id} — deposit already on-chain, skipping`)
+    return
+  }
 
   // Verify balance before attempting transfer
   const balance = await getSellerUsdcBalance()

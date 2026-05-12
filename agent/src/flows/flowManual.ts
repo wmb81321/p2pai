@@ -115,7 +115,7 @@ export async function confirmPayment(
   )
 
   await updateTradeStatus(tradeId, 'released', { release_tx_hash: txHash })
-  console.log(`[flowManual] Trade ${tradeId} → released (tx ${txHash})`)
+  console.log(`[flowManual] Trade ${tradeId} → released (tx: ${txHash})`)
 
   await updateTradeStatus(tradeId, 'complete')
   console.log(`[flowManual] Trade ${tradeId} → complete`)
