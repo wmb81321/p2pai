@@ -4,35 +4,36 @@ p2pai is an agentic P2P crypto-fiat settlement app. An AI Agent coordinates trad
 
 ---
 
-## Current Build Status (2026-05-03) — v2.4.0
+## Current Build Status (2026-05-14) — v2.4.1
 
-**Domain → p2pai.xyz. SKILL.md agent onboarding. Taker fee. Mutual cancellation with USDC refund. Image proof upload. Agent API spec. Stripe columns dropped. 11 migrations applied.**
+**Security & reliability audit complete. Node 22 Docker upgrade. Migration 012 (release_tx_hash). All 20 pre-mainnet bugs fixed. 12 migrations applied. Agent live on Railway at v2.4.1.**
 
 | Layer | Status | Notes |
 |---|---|---|
-| Supabase schema + RLS | ✓ Live | `users`, `orders`, `trades`, `ratings` — 11 migrations applied |
+| Supabase schema + RLS | ✓ Live | `users`, `orders`, `trades`, `ratings` — 12 migrations applied |
 | Migration 007 | ✓ Applied | `orders.virtual_deposit_address` (unique), `service_fee_paid_at`, `service_fee_tx_hash`; legacy open orders expired |
 | Migration 008 | ✓ Applied | `orders.seller_payment_methods` jsonb — payment method snapshot at order creation |
 | Migration 009 | ✓ Applied | `cancelled` and `refunding` added to trade status enum |
 | Migration 010 | ✓ Applied | `cancel_requested` status; `trades.cancel_requested_by`; `trades.cancel_requested_from_status` |
 | Migration 011 | ✓ Applied | Drop legacy Stripe columns from `users` and `trades` (10 columns removed) |
+| Migration 012 | ✓ Applied | `trades.release_tx_hash` text column |
 | Tempo Virtual Address | ✓ Registered | `AGENT_MASTER_ID=0x3ead6d3d`, on-chain Moderato testnet |
 | Agent wallet (EOA) | ✓ Funded | `0x6772787e16a7ea4c5307cc739cc5116b4b26ffc0` |
-| Railway agent | ✓ Live | v2.3.0 — no global Bearer gate; address-in-body auth |
-| Railway deploy method | ✓ Git-push | Repo: `wmb81321/p2pai`, root dir: `/agent`, builder: Dockerfile |
-| Vercel frontend | ✓ Live | v2.4.0 at p2pai.xyz — taker fee, mutual cancel UI, image proof upload, SKILL.md |
+| Railway agent | ✓ Live | v2.4.1 — Node 22, all audit fixes, address-in-body auth |
+| Railway deploy method | ✓ Git-push | Repo: `wmb81321/p2pai`, root dir: `/agent`, Dockerfile (node:22-slim) |
+| Vercel frontend | ✓ Live | v2.4.1 at p2pai.xyz — all security fixes applied |
 | `POST /orders` (agent) | ✓ Live | Public — mppx x402 gate (maker fee 0.1 USDC); creates order + VA; fee forfeited on cancel |
 | `POST /orders/:id/cancel` (agent) | ✓ Live | Address-verified (requester must be order creator), DB-only cancel |
-| `POST /trades` (agent) | ✓ Live | mppx x402 gate (taker fee 0.1 USDC); `externalId = taker_<buyer>_<orderId>`; creates trade |
+| `POST /trades` (agent) | ✓ Live | mppx x402 gate (taker fee 0.1 USDC); role + amount validated against order row |
 | `POST /trades/:id/payment-sent` | ✓ Live | Buyer marks fiat sent; `buyer_address` in body verified against trade |
-| `POST /trades/:id/confirm-payment` | ✓ Live | Seller confirms receipt; `seller_address` verified → USDC release |
+| `POST /trades/:id/confirm-payment` | ✓ Live | Seller confirms receipt; `seller_address` verified → USDC release; crash-recoverable via `payment_confirmed` |
 | `POST /trades/:id/cancel` | ✓ Live | Mutual — first call = `cancel_requested`; second call from other party = execute + refund if deposited |
 | `POST /trades/:id/reject-cancel` | ✓ Live | Non-requester rejects cancel; reverts to `cancel_requested_from_status` |
-| `POST /trades/:id/settle` | ✓ Code ready | Deprecated — now Bearer-auth only, no fee charged |
+| `POST /trades/:id/settle` | ✓ Code ready | Deprecated — Bearer-auth only, no fee charged |
 | `PaymentSentForm` component | ✓ Live | Buyer UI: method selector + reference + image upload + optional proof URL |
 | `ConfirmPaymentPanel` component | ✓ Live | Seller UI: shows buyer's payment details + confirm button |
 | `PaymentMethodsEditor` component | ✓ Live | Seller adds Zelle/Venmo/Wire/etc. on `/account` |
-| Image proof upload | ✓ Live | `/api/upload-proof` → Supabase Storage `payment-proofs` bucket; 5 MB limit; images only |
+| Image proof upload | ✓ Live | `/api/upload-proof` → Supabase Storage `payment-proofs` bucket; 5 MB limit; party-verified |
 | Order book | ✓ Live | BUY + SELL orders, filter tabs, Realtime, own orders expand/cancel |
 | Place order modal | ✓ Live | mppx/client push mode (maker fee); payment methods for SELL orders; balance check + fee warning |
 | Match order (taker fee) | ✓ Live | mppx/client push mode wraps `POST /api/trades`; `externalId = taker_<buyer>_<orderId>` |
@@ -45,14 +46,16 @@ p2pai is an agentic P2P crypto-fiat settlement app. An AI Agent coordinates trad
 | `SKILL.md` route | ✓ Live | `p2pai.xyz/SKILL.md` — machine-readable setup file; Claude reads + runs `claude mcp add` automatically |
 | Public `GET /api/orders` | ✓ Live | No-auth order listing; `?type=`, `?status=`, `?id=` query params |
 | mppx push mode | ✓ Live | `mode: 'push'` for both maker fee (place order) and taker fee (match order); no `feePayer: true` in agent config |
+| Deposit monitor backfill | ✓ Live | `checkHistoricalDeposit()` called on agent boot; catches deposits that landed during downtime |
 | Stripe agent code | ✗ Removed | `agent/src/stripe/`, `agent/src/lib/link.ts`, `agent/src/routes/webhooks.ts`, `flowA.ts` deleted |
 | Stripe frontend routes | ✗ Stubbed (410) | `/api/stripe/*`, `/api/users/link-pm`, `/api/trades/[id]/{link-pay,auto-pay,payment-intent}` |
 | Stripe components | ✗ Stubbed | `BuyerPaymentForm`, `LinkPayButton`, `LinkPmSetup`, `SaveCardForm`, `StripeConnectButton` are now `export {}` |
 | Stripe webhook | ✗ Removed | `we_1TSOSkIeMhBdGlf7tM8ekyQI` no longer routes to anything |
 | Agent API spec doc | ✓ Done | `docs/agent-api.md` — full v2.2 reference, all endpoints, state machine, mppx setup |
 | Cleanup pass (Phase 10) | ✓ Done | Migration 011; `frontend/app/stripe/` removed; buyer-agent.ts fixed; stale commands removed |
-| Seller agent script | ✗ Phase 11 | `scripts/seller-agent.ts` — auto-deposit on matched orders |
-| End-to-end agentic test | ✗ Phase 12 | `scripts/e2e-agentic.ts` — full headless trade on testnet |
+| Seller agent script | ✓ Done | `scripts/seller-agent.ts` — auto-deposit with testnet guard + double-deposit prevention |
+| End-to-end agentic test | ✓ Done | `scripts/e2e-agentic.ts` — full headless trade on testnet (with testnet guard) |
+| Security audit (Phase ✓) | ✓ Done | 20 bugs fixed; see CHANGELOG [2.4.1] for full list |
 | Mainnet deploy | ✗ Phase 13 | Switch chain, real USDC |
 | Plaid integration | ✗ Phase 14 | Bank account connect + balance signal at trade time (planned) |
 
@@ -70,8 +73,8 @@ p2pai is an agentic P2P crypto-fiat settlement app. An AI Agent coordinates trad
 | `agent/src/routes/` | `orders.ts` — POST /orders + cancel; `trades.ts` — payment-sent, confirm-payment, cancel, reject-cancel, settle | Railway |
 | `agent/src/tempo/` | `wallet.ts`, `monitor.ts`, `chain.ts`, `virtualAddresses.ts` | Railway |
 | `agent/src/lib/` | `env.ts`, `mppx.ts`, `router.ts`, `schemas.ts`, `supabase.ts` (no `link.ts`) | Railway |
-| `supabase/` | SQL migrations (010 applied) + RLS policies | Supabase (production) |
-| `scripts/` | `buyer-agent.ts` — currently stale; rewrite pending for v2.0 | Local / any Node host |
+| `supabase/` | SQL migrations (012 applied) + RLS policies | Supabase (production) |
+| `scripts/` | `seller-agent.ts`, `buyer-agent.ts`, `e2e-agentic.ts` — autonomous agents + e2e test | Local / any Node host |
 | `mcp-server/` | `p2pai-mcp` npm package — stdio MCP, 8 v2.0 tools | npm / `npx` |
 | `docs/` | Architecture references | — |
 | `.claude/` | Workspace rules, slash commands, hooks | — |
@@ -103,7 +106,7 @@ The **agent** needs a persistent long-running process (deposit monitor, on-chain
 
 ---
 
-## Database Schema (10 migrations)
+## Database Schema (12 migrations)
 
 | Migration | What it adds |
 |---|---|
@@ -117,6 +120,8 @@ The **agent** needs a persistent long-running process (deposit monitor, on-chain
 | `008_order_payment_methods.sql` | `orders.seller_payment_methods` jsonb — payment method snapshot at order creation |
 | `009_cancel_statuses.sql` | `cancelled` and `refunding` added to trade status enum |
 | `010_cancel_columns.sql` | `cancel_requested` status; `trades.cancel_requested_by` (text); `trades.cancel_requested_from_status` (trade_status) |
+| `011_drop_stripe.sql` | Drop 10 legacy Stripe columns from `users` and `trades` |
+| `012_release_tx_hash.sql` | `trades.release_tx_hash` text — stores the on-chain tx hash from `confirmPayment` |
 
 Legacy Stripe columns (`stripe_account`, `link_payment_method_id`, `stripe_customer_id`, `stripe_buyer_pm_id`, `stripe_buyer_card_brand`, `stripe_buyer_card_last4`, `stripe_payment_intent_id`, `link_spend_request_id`, `stripe_payout_id`, `stripe_account_id`) remain in the schema for backward compatibility but are NOT written by any v2.0+ code path. They will be dropped in a future migration.
 

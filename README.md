@@ -7,7 +7,7 @@ Agentic P2P crypto-fiat settlement on Tempo. An AI Agent coordinates trades betw
 
 ---
 
-## What Works Today (v2.3.0 · Moderato Testnet)
+## What Works Today (v2.4.1 · Moderato Testnet)
 
 - **Order book** — live BUY/SELL orders with Supabase Realtime; filter by All/Buy/Sell; own orders expandable with cancel button
 - **Place orders** — pay 0.1 USDC service fee (mppx push mode) → order created with per-order virtual deposit address; payment methods shown inline for SELL orders
@@ -116,7 +116,7 @@ pnpm --filter frontend dev  # or: cd frontend && pnpm dev
 
 | Service | Platform | Trigger |
 |---|---|---|
-| Agent | Railway | `git push origin main` — auto-deploys (root: `/agent`, Dockerfile) |
+| Agent | Railway | `railway up` from `agent/` dir — or `git push` if GitHub webhook configured (node:22-slim) |
 | Frontend | Vercel | `git push origin main` — auto-deploys (root: `/frontend`, Next.js) |
 
 ```bash
@@ -159,7 +159,7 @@ mcp-server/
   src/index.ts               p2pai-mcp npm package — 8 MCP tools for agents
 
 supabase/
-  migrations/                011 migrations applied (Stripe columns dropped)
+  migrations/                012 migrations applied (incl. release_tx_hash)
 
 docs/
   agent-api.md               Full v2.2 API reference — all endpoints, auth, state machine

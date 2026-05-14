@@ -1,5 +1,50 @@
 # Changelog
 
+## [2.4.1] — 2026-05-14
+
+### Fixed (Security & Reliability Audit)
+
+- **`agent/Dockerfile`** — upgraded from `node:20-slim` to `node:22-slim`; `@supabase/realtime-js` (bundled with latest `@supabase/supabase-js`) requires Node 22+ for native WebSocket — every `railway up` was failing silently with `Node.js 20 detected without native WebSocket support`
+- **`flowManual.ts` — `fetchTrade`** — changed `.single()` to `.maybeSingle()` to prevent raw Supabase coerce error on missing trade; now throws a clean `Trade ${id} not found`
+- **`flowManual.ts` — `confirmPayment`** — fixed crash-recovery state machine: removed premature `released` write before `transferUsdc`; `payment_confirmed` is now the stable pre-transfer checkpoint; agent restarts re-enter here and retry the transfer correctly without re-charging
+- **`routes/trades.ts` — `POST /trades`** — changed `CreateTradeBody.parse()` to `.safeParse()`; bad input now returns 400 instead of throwing an unhandled error that crashed the request
+- **`routes/trades.ts` — `POST /trades`** — added seller/buyer role validation against `order.user_address` by order type; prevents address spoofing where a taker could supply any `seller_address` and intercept the USDC release
+- **`routes/trades.ts` — `POST /trades`** — use `matchedOrder.usdc_amount` and `matchedOrder.usd_amount` instead of body values; prevents taker from forging a lower deposit requirement to unlock a trade early
+- **`routes/trades.ts` — `POST /trades`** — legacy order without virtual deposit address now re-opens the order before returning 409 (was leaving order stuck as `matched`)
+- **`routes/trades.ts` — `cancel`** — order re-opens only AFTER `transferUsdc` confirms; previously re-opened before the transfer, allowing the order to be re-matched while a refund was in-flight
+- **`routes/trades.ts` — `cancel`** — clears `cancel_requested_by` and `cancel_requested_from_status` on all terminal cancel states (`cancelled`, `refunded`)
+- **`routes/trades.ts` — `confirm-payment`** — 404 returned when trade is not found (was 409), 403 for seller mismatch, 409 for wrong state
+- **`tempo/monitor.ts`** — added `checkHistoricalDeposit()` using `getLogs({ fromBlock: 0n })` called at agent boot before starting the live watcher; fills the gap when a deposit lands while the agent is offline (`watchEvent` is forward-only and missed these)
+- **`tempo/monitor.ts`** — added WARN log for under-amount deposits with tx hash and virtual address for manual recovery
+- **`tempo/wallet.ts`** — added `receipt.status === 'success'` check after `waitForTransactionReceipt`; reverted on-chain transfers now throw instead of being silently treated as success
+- **`lib/env.ts`** — removed dead `AGENT_API_KEY` from Zod schema; it was required at startup but never checked in any route
+- **`frontend/app/api/upload-proof`** — added `trade_id` + `uploader_address` to request; route now verifies the uploader is a party to the trade before accepting the file
+- **`frontend/app/api/orders/route.ts`** — removed `virtual_deposit_address`, `service_fee_paid_at`, `service_fee_tx_hash` from `PUBLIC_COLS`; internal agent fields should not be in the public order listing
+- **`frontend/app/api/trades/[id]/cancel`** and **`reject-cancel`** — fixed silent error body swallowing in proxy route; errors now surface correctly to the UI
+- **`frontend/app/api/orders/by-user`** and **`trades/by-user`** — normalise address to `.toLowerCase()` before DB query to match stored values
+- **`frontend/components/payment-sent-form.tsx`** — added `trade_id` and `uploader_address` to upload FormData so `upload-proof` can verify party membership
+- **`scripts/seller-agent.ts`** — added testnet-only safety gate (chain ID check); added `isAlreadyDeposited()` on-chain `getLogs` check before transferring to prevent double-deposit on script restart
+- **`scripts/e2e-agentic.ts`** — added testnet-only safety gate
+- **`mcp-server/src/index.ts`** — added actionable 402 error message in `apiFetch` with instructions for funding the agent wallet
+- **Migration 012** (`supabase/migrations/012_release_tx_hash.sql`) — added `trades.release_tx_hash` column; `flowManual.ts` was already writing this field but the column was missing, causing every `confirmPayment` call to fail silently
+
+---
+
+## [2.4.0] — 2026-05-03
+
+### Added
+- **`/agents` page** — full Tempo-style user onboarding flow; three-tab terminal demo (Claude Code, MCP config, wallet funding); wallet-aware (shows connected address in bootstrap command)
+- **`SKILL.md` route** (`p2pai.xyz/SKILL.md`) — machine-readable setup file; one command bootstraps Claude Code with MCP + wallet: `claude -p "Read https://p2pai.xyz/SKILL.md and set up p2pai. My wallet is 0x..."`
+- **`llms.txt` / `llms-full.txt` routes** — LLM-optimised index and full API reference at `p2pai.xyz/llms.txt` and `p2pai.xyz/llms-full.txt`
+- **`skill.md`** at repo root — enables `npx skills add wmb81321/p2pai` for persistent Claude Code context
+
+### Updated
+- Frontend domain migrated to `p2pai.xyz`
+- All docs updated to reference `p2pai.xyz`
+- `README.md`, `CLAUDE.md`, `ROADMAP.md` updated for Phase 12 completion and Phase 13 planning
+
+---
+
 ## [2.3.2] — 2026-05-03
 
 ### Added
