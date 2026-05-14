@@ -21,8 +21,9 @@ async function fetchTrade(tradeId: string) {
     .from('trades')
     .select('*')
     .eq('id', tradeId)
-    .single()
-  if (error ?? !data) throw new Error(`Trade ${tradeId} not found: ${error?.message ?? 'no data'}`)
+    .maybeSingle()
+  if (error) throw new Error(`Trade ${tradeId} fetch failed: ${error.message}`)
+  if (!data) throw new Error(`Trade ${tradeId} not found`)
   return TradeRowSchema.parse(data)
 }
 

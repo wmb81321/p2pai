@@ -182,7 +182,8 @@ export function registerTradeRoutes(router: Router): void {
       json(res, 200, { ok: true })
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err)
-      json(res, 409, { error: msg })
+      const code = msg.includes('not found') ? 404 : 409
+      json(res, code, { error: msg })
     }
   })
 
@@ -202,7 +203,9 @@ export function registerTradeRoutes(router: Router): void {
       json(res, 200, { ok: true, status: 'complete' })
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err)
-      const code = msg.includes('Only the seller') ? 403 : 409
+      const code = msg.includes('Only the seller') ? 403
+                 : msg.includes('not found')        ? 404
+                 : 409
       json(res, code, { error: msg })
     }
   })
